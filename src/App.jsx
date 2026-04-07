@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import './App.css';
 
 function App() {
-  // States for all inputs and dropdowns
   const [prompt, setPrompt] = useState('');
   const [vehicleType, setVehicleType] = useState('');
   const [scenery, setScenery] = useState('');
@@ -10,18 +9,21 @@ function App() {
   const [aspectRatio, setAspectRatio] = useState('9:16');
   const [timeOfDay, setTimeOfDay] = useState('');
 
-  // App States
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [copiedImagePrompt, setCopiedImagePrompt] = useState(false);
   const [copiedVideoPrompt, setCopiedVideoPrompt] = useState(false);
 
-  // Parse the generated result to extract specific sections
   const extractSection = (text, startMarker, endMarker) => {
     if (!text) return "";
     const startIndex = text.indexOf(startMarker);
     if (startIndex === -1) return "";
     const actualStartIndex = startIndex + startMarker.length;
+    
+    if (endMarker === "") {
+        return text.substring(actualStartIndex).trim();
+    }
+    
     const endIndex = text.indexOf(endMarker, actualStartIndex);
     if (endIndex === -1) {
       return text.substring(actualStartIndex).trim();
@@ -108,7 +110,7 @@ function App() {
       if (data.candidates && data.candidates[0].content.parts[0].text) {
         setResult(data.candidates[0].content.parts[0].text);
       } else if (data.error) {
-         setResult(\`API Error: \${data.error.message}\`);
+         setResult(`API Error: ${data.error.message}`);
       } else {
         setResult("Error generating content. Please try again.");
       }
@@ -132,12 +134,10 @@ function App() {
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '20px', fontFamily: 'sans-serif', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       
-      {/* Main Content Area */}
       <div style={{ flex: 1 }}>
         <h1 style={{ textAlign: 'center' }}>🚐 WOW AI Builder Studio</h1>
         <p style={{ textAlign: 'center', color: '#555' }}>Select your parameters or just hit Surprise Me!</p>
 
-        {/* DROPDOWN OPTIONS CONTAINER */}
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '15px', flexWrap: 'wrap' }}>
           
           <select style={selectStyle} value={vehicleType} onChange={(e) => setVehicleType(e.target.value)}>
@@ -182,7 +182,6 @@ function App() {
           </select>
         </div>
 
-        {/* INPUT FORM */}
         <form onSubmit={handleManualSubmit} style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
           <input 
             type="text" 
@@ -199,7 +198,6 @@ function App() {
           </button>
         </form>
 
-        {/* OUTPUT DISPLAY */}
         {result && (
           <div style={{ background: '#f4f4f4', padding: '20px', borderRadius: '10px', lineHeight: '1.6', textAlign: 'left', borderLeft: '5px solid #007bff' }}>
             <h2 style={{marginTop: '0'}}>**[ {extractSection(result, "[", "]")} ]**</h2>
@@ -208,40 +206,44 @@ function App() {
               <div>
                 <div style={{display: 'flex', alignItems: 'center'}}>
                   <span style={{fontWeight: 'bold'}}>📋 Image Prompt:</span>
-                  <button style={copyBtnStyle} onClick={() => copyToClipboard(extractSection(result, "**Image Prompt:**", "\n**"), setCopiedImagePrompt)}>
+                  <button style={copyBtnStyle} onClick={() => copyToClipboard(extractSection(result, "**Image Prompt:**", "**Negative Prompt:**"), setCopiedImagePrompt)}>
                      {copiedImagePrompt ? 'Copied!' : '📋 Copy'}
                   </button>
                 </div>
                 <div style={{ background: '#fff', padding: '10px', borderRadius: '5px', border: '1px solid #ddd', fontSize: '14px', whiteSpace: 'pre-wrap', marginTop: '5px' }}>
-                  {extractSection(result, "**Image Prompt:**", "\n**")}
+                  {extractSection(result, "**Image Prompt:**", "**Negative Prompt:**")}
                 </div>
               </div>
 
               <div>
                 <div style={{display: 'flex', alignItems: 'center'}}>
                   <span style={{fontWeight: 'bold'}}>🎬 Video Prompt:</span>
-                  <button style={copyBtnStyle} onClick={() => copyToClipboard(extractSection(result, "**Video Prompt:**", "\n**"), setCopiedVideoPrompt)}>
+                  <button style={copyBtnStyle} onClick={() => copyToClipboard(extractSection(result, "**Video Prompt:**", "**Negative Video Prompt:**"), setCopiedVideoPrompt)}>
                      {copiedVideoPrompt ? 'Copied!' : '🎬 Copy'}
                   </button>
                 </div>
                 <div style={{ background: '#fff', padding: '10px', borderRadius: '5px', border: '1px solid #ddd', fontSize: '14px', whiteSpace: 'pre-wrap', marginTop: '5px' }}>
-                  {extractSection(result, "**Video Prompt:**", "\n**")}
+                  {extractSection(result, "**Video Prompt:**", "**Negative Video Prompt:**")}
                 </div>
               </div>
 
               <div style={{ borderTop: '1px solid #ddd', paddingTop: '15px', marginTop: '10px', fontSize: '14px', whiteSpace: 'pre-wrap'}}>
-                {extractSection(result, "**Negative Prompt:**", "\n**\n**\n**\n**\n")}
-                {"\n**Negative Prompt:** " + extractSection(result, "**Negative Prompt:**", "\n**")}
-                {"\n**Negative Video Prompt:** " + extractSection(result, "**Negative Video Prompt:**", "\n**")}
-                {"\n**#ytd:** " + extractSection(result, "**#ytd:**", "")}
+                {"**Negative Prompt:** " + extractSection(result, "**Negative Prompt:**", "**Video Prompt:**")}
+                {"\n\n**Negative Video Prompt:** " + extractSection(result, "**Negative Video Prompt:**", "**#ytd:**")}
+                {"\n\n**#ytd:** \n" + extractSection(result, "**#ytd:**", "")}
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* FOOTER SECTION */}
       <footer style={{ textAlign: 'center', marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #eaeaea', color: '#888', fontSize: '14px' }}>
-        <p style={{ margin: '5px 0' }}>Version 2.1</p>
         <p style={{ margin: '5px 0' }}>Powered By <span style={{ color: '#007bff', fontWeight: 'bold' }}>Gemini ✨</span></p>
-        <p style={{ margin: '5px
+        <p style={{ margin: '5px 0', fontSize: '12px' }}>Created and Owned by <strong>TART</strong></p>
+      </footer>
+
+    </div>
+  );
+}
+
+export default App;
