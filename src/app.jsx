@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import './App.css'; // You can style this later
+import './App.css';
 
 function App() {
   const [prompt, setPrompt] = useState('');
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Your Master Knowledge Base & System Instructions
   const systemInstructions = `
     Role: You are the "World of Wonder AI" Lead Designer. 
     Core Rules: Always 9:16 aspect ratio, seamless unibody RV construction, integrated cockpit, 2-to-3 stories, luxury interior.
@@ -39,10 +38,16 @@ function App() {
     setResult('');
     
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    // Using Gemini 1.5 Flash or Pro via REST API
-    const url = \`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=\${apiKey}\`;
+    
+    if (!apiKey) {
+      setResult("Error: API Key is missing. Please check your .env file or Vercel Environment Variables.");
+      setLoading(false);
+      return;
+    }
 
-    const fullPrompt = \`\${systemInstructions}\\n\\nUser Request: \${customPrompt}\`;
+    // FIXED: Correct template literal syntax without backslashes
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${apiKey}`;
+    const fullPrompt = `${systemInstructions}\n\nUser Request: ${customPrompt}`;
 
     try {
       const response = await fetch(url, {
@@ -57,12 +62,14 @@ function App() {
       
       if (data.candidates && data.candidates[0].content.parts[0].text) {
         setResult(data.candidates[0].content.parts[0].text);
+      } else if (data.error) {
+         setResult(`API Error: ${data.error.message}`);
       } else {
         setResult("Error generating content. Please try again.");
       }
     } catch (error) {
       console.error("API Error:", error);
-      setResult("Failed to connect to Gemini API. Check your API key.");
+      setResult("Failed to connect to Gemini API. Check your internet connection or API key.");
     } finally {
       setLoading(false);
     }
@@ -71,6 +78,16 @@ function App() {
   const handleManualSubmit = (e) => {
     e.preventDefault();
     if (prompt) generateConcept(prompt);
+  };
+
+  const btnStyle = {
+    padding: '10px 15px',
+    cursor: 'pointer',
+    borderRadius: '5px',
+    border: '1px solid #ccc',
+    background: '#fff',
+    fontWeight: 'bold',
+    margin: '5px'
   };
 
   return (
@@ -97,28 +114,19 @@ function App() {
           placeholder="Or type your custom RV idea here..." 
           style={{ flex: 1, padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
         />
-        <button type="submit" disabled={loading} style={{...btnStyle, background: '#007bff', color: 'white'}}>
+        <button type="submit" disabled={loading} style={{...btnStyle, background: '#007bff', color: 'white', border: 'none'}}>
           {loading ? 'Generating...' : 'Generate 🚀'}
         </button>
       </form>
 
       {/* Output Display */}
       {result && (
-        <div style={{ background: '#f4f4f4', padding: '20px', borderRadius: '10px', whiteSpace: 'pre-wrap' }}>
+        <div style={{ background: '#f4f4f4', padding: '20px', borderRadius: '10px', whiteSpace: 'pre-wrap', lineHeight: '1.5', textAlign: 'left' }}>
           {result}
         </div>
       )}
     </div>
   );
 }
-
-const btnStyle = {
-  padding: '10px 15px',
-  cursor: 'pointer',
-  borderRadius: '5px',
-  border: '1px solid #ccc',
-  background: '#fff',
-  fontWeight: 'bold'
-};
 
 export default App;
