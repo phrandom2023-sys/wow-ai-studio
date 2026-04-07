@@ -56,7 +56,7 @@ function App() {
       return;
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
     
     // CONCATENATION LOGIC
     let userIntent = "";
